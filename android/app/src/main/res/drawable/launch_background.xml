@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <bitmap android:gravity="fill" android:src="@drawable/background"/>
+    </item>
+
+    <item
+        android:gravity="center"
+        android:width="@android:dimen/thumbnail_width"
+        android:height="@android:dimen/thumbnail_height">
+
+        <bitmap android:src="@drawable/main_icon"/>
+    </item>
+
+</layer-list>
