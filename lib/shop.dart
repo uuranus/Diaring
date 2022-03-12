@@ -3,9 +3,7 @@ import 'dart:async';
 
 import 'package:diaring/purchase.dart';
 import 'package:diaring/strings.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'shop_emojis.dart';
 import 'shop_hot.dart';
@@ -35,7 +33,6 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin{
         _products=products;
       });
     }).then((value) {
-      print("_subscription ${value}");
       _subscription=value;
     });
 

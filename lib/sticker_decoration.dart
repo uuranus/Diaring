@@ -93,7 +93,7 @@ class _StickerDecorationState extends State<StickerDecoration> {
     int isf= await Preferences.getIsFirst(22);
     isFirst=isf;
     if(isFirst==1){
-      Future.delayed(const Duration(milliseconds: 2000), showTutorial);
+      Future.delayed(const Duration(milliseconds: 2500), showTutorial);
     }
   }
 

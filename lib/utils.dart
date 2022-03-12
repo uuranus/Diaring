@@ -4,7 +4,7 @@ import 'dart:collection';
 import 'package:diaring/monthUtils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'memo.dart';
@@ -375,6 +375,7 @@ class FirebaseNotes {
 
 class Preferences{
   static const String ACCOUNT_KEY="accountkey";
+  static const String LOGIN_KEY="loginkey";
   static const String SELECTED_EMOJI="0";
   static const String SELECTED_THEME="-1";
   static const String TWOONE="21";
@@ -383,6 +384,22 @@ class Preferences{
   static const String THREE="3";
   static const String FOUR="4";
   static const String FIVE="5";
+
+  static Future<bool> setLoginKey(int loginkey) async{
+    SharedPreferences pref= await SharedPreferences.getInstance();
+    pref.setInt(LOGIN_KEY,loginkey);
+    return pref.commit();
+  }
+
+  static Future<int> getLoginKey() async{
+    SharedPreferences pref=await SharedPreferences.getInstance();
+    int? loginkey=pref.getInt(LOGIN_KEY);
+
+    loginkey ??= 0;
+    //0 익명 1 구글 2 페이스북 3 애플
+
+    return loginkey;
+  }
 
   static Future<bool> setAccountKey(String accountkey) async{
     SharedPreferences pref= await SharedPreferences.getInstance();
@@ -442,20 +459,6 @@ class Preferences{
     return fu.uid;
   }
 
-  static Future<bool> setEmojiKey(String emojikey) async{
-    SharedPreferences pref= await SharedPreferences.getInstance();
-    pref.setString(SELECTED_EMOJI,emojikey);
-    return pref.commit();
-  }
-
-  static Future<String> getEmojiKey() async{
-    SharedPreferences pref=await SharedPreferences.getInstance();
-    String? emojikey=pref.getString(SELECTED_EMOJI);
-
-    emojikey ??= "0";
-
-    return emojikey;
-  }
 
   static Future<bool> setThemeKey(int themekey) async{
     SharedPreferences pref= await SharedPreferences.getInstance();

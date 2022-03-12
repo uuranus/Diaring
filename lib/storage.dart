@@ -215,14 +215,8 @@ class StickerStorage{
 
   //이모티콘 설정
   static Future<void> getSelectedEmojis(  //내가 설정해놓은 이모티콘 이미지들 가져오기
-      void onData( path,isdone)) async{
+      void onData( path,isdone, emojikey)) async{
     String accountKey=await Preferences.getAccountKey();
-    String emojikey=await Preferences.getEmojiKey();
-
-    if(emojikey=="0"){
-      onData("",true);
-      return;
-    }
 
     FirebaseDatabase.instance
         .ref("Diaring")
@@ -230,28 +224,38 @@ class StickerStorage{
         .child(accountKey)
         .child("history")
         .child("emojis")
-        .child(emojikey)
+        .orderByChild("isSelected")
+        .equalTo(true)
         .once()
-        .then((value){
+        .then((value) {
+          String emojikey="";
+          for( var c in value.snapshot.children){
+            emojikey=c.key.toString();
+          }
 
-             FirebaseStorage.instance.ref().child("emojis/${emojikey}").listAll().then((value) async {
-               bool isdone=false;
-                for(var item in value.items){
-                  if(value.items.last==item)  isdone=true;
+          FirebaseStorage.instance.ref().child("emojis/${emojikey}").listAll().then((value) async {
+            bool isdone=false;
 
-                  await item.getDownloadURL().then((url) {
-                    onData(url,isdone);
-                  });
-                }
+            if(value.items.isEmpty) {
+              onData("",true,emojikey);
+              return;
+            }
+            for(var item in value.items){
+              if(value.items.last==item)  isdone=true;
 
-
+              await item.getDownloadURL().then((url) {
+                onData(url,isdone,emojikey);
               });
+            }
+
+          });
+
         });
+
   }
 
-  static Future<void> setEmojiSelection(String neww) async{ //설정한 이모티콘 저장하기
+  static Future<void> setEmojiSelection(String old, String neww) async{ //설정한 이모티콘 저장하기
     String accountKey=await Preferences.getAccountKey();
-    String emojikey=await Preferences.getEmojiKey();
 
     FirebaseDatabase.instance
         .ref("Diaring")
@@ -259,7 +263,7 @@ class StickerStorage{
         .child(accountKey)
         .child("history")
         .child("emojis")
-        .child(emojikey)
+        .child(old)
         .update({
           "isSelected" : false,
         });
@@ -274,8 +278,6 @@ class StickerStorage{
         .update({
           "isSelected" : true,
         });
-
-    await Preferences.setEmojiKey(neww);
 
   }
 

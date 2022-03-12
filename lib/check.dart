@@ -21,9 +21,9 @@ class _CheckState extends State<Check>{
   //global keys for tutorial
   late TutorialCoachMark tutorialCoachMark;
   List<TargetFocus> targets = <TargetFocus>[];
-  final GlobalKey _dateKey = GlobalObjectKey("date");
-  final GlobalKey _checkKey = GlobalObjectKey("check");
-  final GlobalKey _imageKey = GlobalObjectKey("image");
+  final GlobalKey _dateKey = const GlobalObjectKey("date");
+  final GlobalKey _checkKey = const GlobalObjectKey("check");
+  final GlobalKey _imageKey = const GlobalObjectKey("image");
   int isFirst=1;
 
 
@@ -51,6 +51,7 @@ class _CheckState extends State<Check>{
   List<String> _selectedEmojis=<String>['images/emojis01.png','images/emojis02.png','images/emojis03.png','images/emojis04.png','images/emojis05.png']; //bottomsheet에서 선택시 변경되는 이모티콘을 위한 것들
   List<String> emojis=<String>[];
   bool isdefault=true;
+  String old="";
   bool isDone=false; //아직 전 이모티콘 다 가져오기 전에 다른 걸로 바꾸면 섞이므로 다 로딩 후 클릭가능하게 함
   int _selectedID=0; //bottomsheet row 현재 선택중인 거
   String select="선택하기";
@@ -86,11 +87,12 @@ class _CheckState extends State<Check>{
 
   void initEmoji(){
     emojis=[]; //초기화
-    StickerStorage.getSelectedEmojis((path,isdone) {
+    StickerStorage.getSelectedEmojis((path,isdone,emojikey) {
       if(path==""){
         setState(() {
           emojis=<String>['images/emojis01.png','images/emojis02.png','images/emojis03.png','images/emojis04.png','images/emojis05.png'];
           isDone=isdone;
+          old=emojikey;
         });
         isdefault=true;
       }
@@ -98,6 +100,7 @@ class _CheckState extends State<Check>{
         setState(() {
           emojis.add(path);
           isDone=isdone;
+          old=emojikey;
         });
         isdefault=false;
       }
@@ -323,9 +326,7 @@ class _CheckState extends State<Check>{
                   }
                   return GestureDetector(
                     onTap: () => isDone ? _buildEmojiBottomSheet(context) : null,
-                    child: emojis.isEmpty||emojis.length<5? Container(
-                      child : Text('Loading...',style: Theme.of(context).textTheme.headline5,)
-                    ) : Container(
+                    child: emojis.length<5 ? Container(width: 100, height:100, alignment: Alignment.center, child: Text('Loading...',style: Theme.of(context).textTheme.headline5,)) : Container(
                         key: _imageKey,
                         child: isdefault ?
                         Image.asset(
@@ -375,7 +376,7 @@ class _CheckState extends State<Check>{
                       GestureDetector(
                         onTap: () {
                           if(!_myemojis[_selectedID].isSelected){ //선택하기 버튼일 때
-                            StickerStorage.setEmojiSelection(_myemojis[_selectedID].groupID).then((value) =>  initEmoji()); //선택된 이모티콘들 다시 가져오기 );
+                            StickerStorage.setEmojiSelection(old, _myemojis[_selectedID].groupID).then((value) =>  initEmoji()); //선택된 이모티콘들 다시 가져오기 );
                             setstate(() {
                               _myemojis[_selectedID].isSelected=true;
                             });
@@ -436,10 +437,10 @@ class _CheckState extends State<Check>{
                               (index){
                             return GestureDetector(
                               onTap: (){
-                                getEmoji(_myemojis[index].groupID);
                                 setstate(() {
                                   _selectedID=index;
                                 });
+                                getEmoji(_myemojis[index].groupID);
                               },
                               child:Container(
                                 margin: const EdgeInsets.all(5),
@@ -496,19 +497,17 @@ class _CheckState extends State<Check>{
             align: ContentAlign.custom,
             customPosition: CustomTargetContentPosition(top: MediaQuery.of(context).size.height /2),
             builder: (context, controller) {
-              return Container(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: <Widget>[
-                    Text(
-                      Strings.of(context).get('tutorial_check_date'),
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: <Widget>[
+                  Text(
+                    Strings.of(context).get('tutorial_check_date'),
+                    style: const TextStyle(
+                      color: Colors.white,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               );
             },
           ),
@@ -525,19 +524,17 @@ class _CheckState extends State<Check>{
           TargetContent(
             align: ContentAlign.top,
             builder: (context, controller) {
-              return Container(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: <Widget>[
-                    Text(
-                      Strings.of(context).get('tutorial_check_check'),
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: <Widget>[
+                  Text(
+                    Strings.of(context).get('tutorial_check_check'),
+                    style: const TextStyle(
+                      color: Colors.white,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               );
             },
           ),
@@ -555,19 +552,17 @@ class _CheckState extends State<Check>{
           TargetContent(
             align: ContentAlign.top,
             builder: (context, controller) {
-              return Container(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    Text(
-                      Strings.of(context).get('tutorial_check_image'),
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    Strings.of(context).get('tutorial_check_image'),
+                    style: const TextStyle(
+                      color: Colors.white,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               );
             },
           ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:diaring/strings.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -64,12 +65,15 @@ class _StaggeredGridePage extends State<StaggeredGridePage> {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: StaggeredGrid.count(
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
-          crossAxisCount: _colForStaggeredView(context),
-          children: List.generate(_listTile.length, (index) => _memoGenerator(index))
-
+        child: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: StaggeredGrid.count(
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 4,
+            axisDirection: AxisDirection.down,
+            crossAxisCount: _colForStaggeredView(context),
+            children: List.generate(_listTile.length, (index) => _memoGenerator(index))
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(

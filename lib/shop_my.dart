@@ -1,8 +1,11 @@
 import 'package:diaring/strings.dart';
 import 'package:extended_image/extended_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 import 'colorlist.dart';
 import 'storage.dart';
@@ -28,24 +31,40 @@ class _ShopMyState extends State<ShopMy> with SingleTickerProviderStateMixin{
   List<String> paths=<String>[];
   String nickname="";
   String id="";
+  int login=0;
   final TextEditingController _nicknamecontroller = TextEditingController();
 
   @override
   void initState() {
     _tabController =TabController(length: 3, vsync: this);
+    init();
+    super.initState();
+  }
+  void init(){
     initStream();
     groupVal=ColorList.getCurColorListIndex();
+    initAccount();
+    Preferences.getthemeKey().then((value) => groupVal=value);
+  }
+  void initAccount(){
     Preferences.getNickname((nick){
       setState(() {
         nickname=nick;
         _nicknamecontroller.text=nickname;
       });
     });
-    Preferences.getAccountKey().then((value) => id=value);
-    Preferences.getthemeKey().then((value) => groupVal=value);
-    super.initState();
-  }
+    Preferences.getLoginKey().then((value) {
+      setState(() {
+        login=value;
+      });
 
+    });
+    Preferences.getAccountKey().then((value) {
+      setState(() {
+        id=value;
+      });
+    });
+  }
 
   void initStream(){
     StickerStorage.getMyStickers((titles) {
@@ -81,10 +100,47 @@ class _ShopMyState extends State<ShopMy> with SingleTickerProviderStateMixin{
                 mainAxisAlignment: MainAxisAlignment.center,
                 children:[
                   const CircleAvatar(
-                     radius: 50,
+                     radius: 40,
                      backgroundImage: NetworkImage("https://firebasestorage.googleapis.com/v0/b/diaring-49b35.appspot.com/o/playstore.png?alt=media&token=766d426e-14df-4b59-bde4-b3b4923c8953"),
                   ),
                   const SizedBox(height: 15,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: (){
+                          showDialog(
+                            context: context,
+                            builder: (context) =>
+                                AlertDialog(
+                                  content: Text(Strings.of(context).get('shop_my_delete_msg'),
+                                    style: Theme.of(context).textTheme.headline5,
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      child: Text(Strings.of(context).get('dialog_cancel')),
+                                      onPressed: () =>
+                                          Navigator.pop(context),
+                                    ),
+                                    TextButton(
+                                      child: Text(Strings.of(context).get('dialog_ok')),
+                                      onPressed: () {
+                                        FirebaseAuth.instance.currentUser!.delete(); //계정 삭제 후 앱 종료
+                                        Preferences.setLoginKey(0);
+                                        Navigator.pop(context);
+                                        SystemNavigator.pop();
+                                      }
+                                    ),
+                                  ],
+                                ),
+                          );
+                        },
+                        child: Text(Strings.of(context).get('shop_my_delete') ,
+                            style: TextStyle(fontSize: 9,color: Colors.grey[500],fontWeight: FontWeight.w400)
+                        ),
+                      )
+                    ],
+                  ),
                   GestureDetector(
                     onTap: ()=>
                     showDialog(
@@ -112,7 +168,9 @@ class _ShopMyState extends State<ShopMy> with SingleTickerProviderStateMixin{
                                       context: context,
                                       builder: (context) =>
                                           AlertDialog(
-                                            content: Text(Strings.of(context).get('text_empty')),
+                                            content: Text(Strings.of(context).get('text_empty'),
+                                              style: Theme.of(context).textTheme.headline5,
+                                            ),
                                             actions: [
                                               TextButton(
                                                 child: Text(Strings.of(context).get('dialog_ok')),
@@ -128,7 +186,9 @@ class _ShopMyState extends State<ShopMy> with SingleTickerProviderStateMixin{
                                       context: context,
                                       builder: (context) =>
                                           AlertDialog(
-                                            content: Text(Strings.of(context).get('text_limit')),
+                                            content: Text(Strings.of(context).get('text_limit'),
+                                              style: Theme.of(context).textTheme.headline5,
+                                            ),
                                             actions: [
                                               TextButton(
                                                 child: Text(Strings.of(context).get('dialog_ok')),
@@ -158,9 +218,105 @@ class _ShopMyState extends State<ShopMy> with SingleTickerProviderStateMixin{
                     ),
                   ),
                   const SizedBox(height: 10,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      login!=0?
+                     Container(
+                       width: 15,
+                       height:15,
+                       child: CircleAvatar(
+                         child: Image.asset(
+                           login==1 ? "images/google.png" : login==2 ? "images/facebook.png" : "images/apple.png"
+                         ),
+                         backgroundColor: ColorList.getColor(0),
+                        ),
+                     ): Container(),
+                      const SizedBox(width: 5,),
+                      Text(
+                          id,
+                          style: TextStyle(fontSize: 9,color: Colors.grey[500],fontWeight: FontWeight.w400), //회색으로 고정
+                      ),
+
+                    ],
+                  ),
+                  const SizedBox(height: 15,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children:  List.generate(3, (index) {
+                      return GestureDetector(
+                          onTap:(){
+                            if(login!=0){
+                              showDialog(
+                                context: context,
+                                builder: (context) =>
+                                    AlertDialog(
+                                      content: Text(Strings.of(context).get('shop_my_already_backup'),
+                                        style: Theme.of(context).textTheme.headline5,
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                            child: Text(Strings.of(context).get('dialog_ok')),
+                                            onPressed: () => Navigator.pop(context)
+                                        ),
+                                      ],
+                                    ),
+                              );
+                              return;
+                            }
+                            if(index==0){
+                              //구글 계정 연결
+                              signInWithGoogle();
+                            }
+                            else if(index==1){
+                              signInWithFacebook();
+                            }
+                            else{
+                              showDialog(context: context,
+                                  builder: (context) =>
+                                      AlertDialog(
+                                        content: Text(Strings.of(context).get('shop_my_apple'),
+                                            style: Theme.of(context).textTheme.headline5
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                              child: Text(Strings.of(context).get('dialog_ok'),),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              }
+                                          ),
+                                        ],
+                                      )
+                              );
+                            }
+                          },
+                          child: Padding(
+                              padding: const EdgeInsets.only(left: 4, right: 4),
+                              child:Container(
+                                clipBehavior: Clip.antiAlias,
+                                  child: CircleAvatar(
+                                    child: Image.asset(
+                                      index==0 ? "images/google.png" : index==1 ? "images/facebook.png" : "images/apple.png",
+                                      fit: BoxFit.cover,
+                                    ),
+                                    backgroundColor: ColorList.getColor(0),
+                                  ),
+                                  width:  25.0,
+                                  height:  25.0,
+                                  padding: const EdgeInsets.all(1.0), // border width
+                                  decoration:  BoxDecoration(
+                                    color:  Color(0xffd3d3d3), // border color
+                                    shape: BoxShape.circle,
+                                  )
+                              )
+                          )
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 10,),
                   Text(
-                      id,
-                      style: TextStyle(fontSize: 9,color: Colors.grey[500],fontWeight: FontWeight.w400), //회색으로 고정
+                    Strings.of(context).get('shop_my_backup_msg'),
+                    style: TextStyle(fontSize: 9,color: Colors.grey[500],fontWeight: FontWeight.w400), //회색으로 고정
                   ),
                 ],
               ),
@@ -348,6 +504,91 @@ class _ShopMyState extends State<ShopMy> with SingleTickerProviderStateMixin{
     );
   }
 
+  //로그인 함수
+  Future<void> signInWithGoogle() async {
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    if(credential.accessToken ==null || credential.idToken==null) return;
+
+    // Once signed in, return the UserCredential
+    AuthCredential userCredential= GoogleAuthProvider.credential(idToken: credential.idToken, accessToken: credential.accessToken);
+    // var userCredential=  await FirebaseAuth.instance.signInWithCredential(credential);
+
+    FirebaseAuth.instance.currentUser!.linkWithCredential(userCredential).then((value){
+      print("value ${value}");
+      setState(() {
+        login=1;
+      });
+      Preferences.setLoginKey(1);
+    })
+        .onError((error, stackTrace) {
+          //실패했다는 알림문구
+          //이미 연결된 계정이 있는 경우에는 그 걸 찾아오기
+          showDialog(context: context,
+              builder: (context) =>
+                  AlertDialog(
+                    content: Text(Strings.of(context).get('shop_my_isExisted'),
+                        style: Theme.of(context).textTheme.headline5
+                    ),
+                    actions: [
+                      TextButton(
+                        child: Text(Strings.of(context).get('dialog_cancel'),),
+                        onPressed: () =>
+                            Navigator.pop(context),
+                      ),
+                      TextButton(
+                          child: Text(Strings.of(context).get('dialog_ok'),),
+                          onPressed: () async{
+                            await FirebaseAuth.instance.currentUser!.delete(); //현재 익명 계정은 삭제하고
+                            await FirebaseAuth.instance.signInWithCredential(credential); //기존 계정으로 변경
+                            setState(() {
+                              login=1;
+                              Preferences.setLoginKey(1);
+                              init();
+                            });
+
+                            Navigator.pop(context);
+                          }
+                      ),
+                    ],
+                  )
+          );
+
+        });
+  }
+
+  Future<void> signInWithFacebook() async {
+    // Trigger the sign-in flow
+    final LoginResult loginResult = await FacebookAuth.instance.login();
+
+    // Create a credential from the access token
+    final OAuthCredential facebookAuthCredential = FacebookAuthProvider.credential(loginResult.accessToken!.token);
+
+    // Once signed in, return the UserCredential
+    if(facebookAuthCredential.accessToken ==null ) return;
+
+    // Once signed in, return the UserCredential
+    FirebaseAuth.instance.currentUser!.linkWithCredential(facebookAuthCredential).then((value){
+      print("value ${value}");
+      setState(() {
+        login=2;
+      });
+      Preferences.setLoginKey(2);
+    })
+        .onError((error, stackTrace){
+      //실패했다는 알림문구
+    });
+  }
 }
 
 class Themes{
@@ -357,3 +598,5 @@ class Themes{
 
   Themes(this.title,this.groupID,this.thumbnail);
 }
+
+
